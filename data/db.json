@@ -1,0 +1,10 @@
+{
+  "users": [
+    { "id": "u1", "name": "Admin User", "email": "admin@clinic.com", "password": "admin123", "role": "admin" },
+    { "id": "u2", "name": "Dr. Asha Rao", "email": "asha@clinic.com", "password": "doctor123", "role": "doctor", "specialisation": "Dermatology", "workingHours": "10:00-16:00" },
+    { "id": "u3", "name": "Ravi Kumar", "email": "ravi@example.com", "password": "patient123", "role": "patient" }
+  ],
+  "appointments": [
+    { "id": "a1", "patientId": "u3", "doctorId": "u2", "date": "2026-07-20", "time": "10:30", "symptoms": "Skin rash and itching for 3 days", "status": "booked" }
+  ]
+}
