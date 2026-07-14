@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Clinic Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Healthcare Appointment Manager</h1>
+  <div class="card">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p class="error" id="err"></p>
+  </div>
+  <div class="card">
+    <p>Demo accounts:</p>
+    <ul>
+      <li>Admin: admin@clinic.com / admin123</li>
+      <li>Doctor: asha@clinic.com / doctor123</li>
+      <li>Patient: ravi@example.com / patient123</li>
+    </ul>
+  </div>
+
+<script>
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    document.getElementById("err").textContent = data.error;
+    return;
+  }
+  localStorage.setItem("user", JSON.stringify(data));
+  if (data.role === "admin") window.location.href = "admin.html";
+  else if (data.role === "doctor") window.location.href = "doctor.html";
+  else window.location.href = "patient.html";
+}
+</script>
+</body>
+</html>

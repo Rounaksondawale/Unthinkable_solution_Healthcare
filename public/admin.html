@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Portal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Admin Portal</h1>
+  <p id="welcome"></p>
+
+  <div class="card">
+    <h2>Add Doctor</h2>
+    <input type="text" id="name" placeholder="Full name">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <input type="text" id="specialisation" placeholder="Specialisation">
+    <input type="text" id="workingHours" placeholder="Working hours e.g. 10:00-16:00">
+    <button onclick="addDoctor()">Add Doctor</button>
+    <p class="error" id="err"></p>
+  </div>
+
+  <div class="card">
+    <h2>All Users</h2>
+    <div id="users">Loading...</div>
+  </div>
+
+  <div class="card">
+    <h2>All Appointments</h2>
+    <div id="appointments">Loading...</div>
+  </div>
+
+<script>
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "admin") window.location.href = "index.html";
+document.getElementById("welcome").textContent = "Welcome, " + user.name;
+
+async function loadUsers() {
+  const res = await fetch("/api/admin/users");
+  const list = await res.json();
+  document.getElementById("users").innerHTML = list.map(u => `
+    <div class="card">${u.name} — ${u.email} — <strong>${u.role}</strong>${u.specialisation ? " (" + u.specialisation + ")" : ""}</div>
+  `).join("");
+}
+
+async function loadAppointments() {
+  const res = await fetch("/api/admin/appointments");
+  const list = await res.json();
+  document.getElementById("appointments").innerHTML = list.map(a => `
+    <div class="card">
+      ${a.date} ${a.time} — Patient ${a.patientId} with Doctor ${a.doctorId} —
+      <span class="status-${a.status}">${a.status}</span>
+    </div>
+  `).join("");
+}
+
+async function addDoctor() {
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const specialisation = document.getElementById("specialisation").value;
+  const workingHours = document.getElementById("workingHours").value;
+  const res = await fetch("/api/admin/doctors", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password, specialisation, workingHours })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    document.getElementById("err").textContent = data.error;
+    return;
+  }
+  document.getElementById("err").textContent = "";
+  loadUsers();
+}
+
+loadUsers();
+loadAppointments();
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Doctor Portal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Doctor Portal</h1>
+  <p id="welcome"></p>
+
+  <div class="card">
+    <h2>My Appointments</h2>
+    <div id="appointments">Loading...</div>
+  </div>
+
+<script>
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "doctor") window.location.href = "index.html";
+document.getElementById("welcome").textContent = "Welcome, " + user.name + " (" + user.specialisation + ")";
+
+async function loadAppointments() {
+  const res = await fetch("/api/appointments/doctor/" + user.id);
+  const list = await res.json();
+  const div = document.getElementById("appointments");
+  if (list.length === 0) {
+    div.innerHTML = "<p>No appointments yet.</p>";
+    return;
+  }
+  div.innerHTML = list.map(a => `
+    <div class="card">
+      <strong>${a.date} ${a.time}</strong> — Patient ID: ${a.patientId}<br>
+      Symptoms: ${a.symptoms || "-"}<br>
+      Status: <span class="status-${a.status}">${a.status}</span><br>
+      ${a.status === "booked" ? `<button onclick="cancelAppt('${a.id}')">Cancel</button>` : ""}
+    </div>
+  `).join("");
+}
+
+async function cancelAppt(id) {
+  await fetch("/api/appointments/" + id + "/cancel", { method: "POST" });
+  loadAppointments();
+}
+
+loadAppointments();
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Patient Portal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Patient Portal</h1>
+  <p id="welcome"></p>
+
+  <div class="card">
+    <h2>Book an Appointment</h2>
+    <label>Doctor</label>
+    <select id="doctorSelect"></select>
+    <label>Date</label>
+    <input type="date" id="date">
+    <label>Time</label>
+    <input type="time" id="time">
+    <label>Symptoms</label>
+    <textarea id="symptoms" rows="3" placeholder="Describe your symptoms"></textarea>
+    <button onclick="book()">Book Appointment</button>
+    <p class="error" id="err"></p>
+  </div>
+
+  <div class="card">
+    <h2>My Appointments</h2>
+    <div id="appointments">Loading...</div>
+  </div>
+
+<script>
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "patient") window.location.href = "index.html";
+document.getElementById("welcome").textContent = "Welcome, " + user.name;
+
+async function loadDoctors() {
+  const res = await fetch("/api/doctors");
+  const doctors = await res.json();
+  const sel = document.getElementById("doctorSelect");
+  sel.innerHTML = doctors.map(d =>
+    `<option value="${d.id}">${d.name} (${d.specialisation})</option>`
+  ).join("");
+}
+
+async function loadAppointments() {
+  const res = await fetch("/api/appointments/patient/" + user.id);
+  const list = await res.json();
+  const div = document.getElementById("appointments");
+  if (list.length === 0) {
+    div.innerHTML = "<p>No appointments yet.</p>";
+    return;
+  }
+  div.innerHTML = list.map(a => `
+    <div class="card">
+      <strong>${a.date} ${a.time}</strong> — Doctor ID: ${a.doctorId}<br>
+      Symptoms: ${a.symptoms || "-"}<br>
+      Status: <span class="status-${a.status}">${a.status}</span>
+    </div>
+  `).join("");
+}
+
+async function book() {
+  const doctorId = document.getElementById("doctorSelect").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+  const symptoms = document.getElementById("symptoms").value;
+  const res = await fetch("/api/appointments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ patientId: user.id, doctorId, date, time, symptoms })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    document.getElementById("err").textContent = data.error;
+    return;
+  }
+  document.getElementById("err").textContent = "";
+  loadAppointments();
+}
+
+loadDoctors();
+loadAppointments();
+</script>
+</body>
+</html>
